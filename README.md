@@ -1,5 +1,5 @@
 # EEC277 - Graphics Architecture 
-Prof. John D. Owens, 
+Prof. John D. Owens 
 
 UC Davis - Fall 2017
 
