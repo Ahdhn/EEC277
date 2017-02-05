@@ -1462,9 +1462,10 @@ void runBenchmark(void) {
            * small triangle area size, like -a 0.125 (area of each
            * triangle is 0.125 px^2)
            */
-		  for (size_t bf = 6; bf <= 23; bf++){ 
-			  if (bf >= 15){
-				  myAppState.triangleAreaInPixels = 0.125f;
+		  for (size_t bf = 1; bf <= 23; bf++){ 
+			  if (bf >= 10){
+				  myAppState.triangleAreaInPixels = 0.125f;//automatically change the triangle size when hits the limit 
+				                                          //probably only work for a specific (my) graphic card 
 			  }
 			  myAppState.vertexBufLimit = pow(2.0,double(bf));//calc different buffer size 
 			  wesTriangleRateBenchmark(&myAppState);
@@ -1484,8 +1485,7 @@ void runBenchmark(void) {
 
 		  for (size_t tx = 3; tx <= 12; tx++){//start with texture size of 8x8 up to 4Kx4K
 			  myAppState.textureSize =pow(2.0,double(tx)); //calc different texture size 
-			  wesTriangleRateBenchmark(&myAppState);
-			  fprintf(stderr, "Texture size: %d\n", int(myAppState.textureSize));
+			  wesTriangleRateBenchmark(&myAppState);			  
 			  fprintf(stderr, " %s: area=%2.1f px, txsize=%d, tri rate = %3.2f Mtri/sec, vertex rate=%3.2f Mverts/sec, fill rate = %4.2f Mpix/sec, verts/bucket=%ld, indices/bucket=%ld\n", myAppState.appName, myAppState.triangleAreaInPixels, myAppState.textureSize, myAppState.computedMTrisPerSecond, myAppState.computedMVertexOpsPerSecond, myAppState.computedMFragsPerSecond, myAppState.computedVertsPerArrayCall, myAppState.computedIndicesPerArrayCall);
 			  fprintf(df, "%2.1f\t%d\t%3.2f\t%4.2f\t%4.2f\t%ld\t%ld\n", myAppState.triangleAreaInPixels, myAppState.textureSize, myAppState.computedMVertexOpsPerSecond, myAppState.computedMFragsPerSecond, myAppState.computedMTrisPerSecond, myAppState.computedVertsPerArrayCall, myAppState.computedIndicesPerArrayCall);
 			  fflush(df);

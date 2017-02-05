@@ -71,17 +71,22 @@ We conclude from this comparison that we should also investigate the triangle ra
 
 %========================= Batch Size TStrip Triangles====================================%
 \subsection{Geometry Rate Vs. Fill Rate for Varying Batch Size:}
+The objective of this experiment is to find the buffer size at which the system becomes GPU-limited not interface-limited. Using \protect{\wes}, we were able to test different buffer sizes with each {\fontfamily{qcr}\selectfont glDrawArrays} call and record the vertex and triangle rate of each buffer size as shown in Figure \ref{fig:fill_geo4}(a). We notice that the least performance corresponds to the smallest buffer size since the CPU is not able to send enough work to the GPU and thus the system is bandwidth-limited. With increasing the bucket size, the vertex and triangle rate improves up to buffer of size $2^{4}$ where the system is GPU limited (limited by the geometry stage). The curve exhibits another jump in the performance with buffer of size $2^{12}$ where we have to decrease the triangle area to maintain a buffer of large size. After this second jump, the curve is almost the same which means that the process is still limited by the GPU. 
+
+To calculate the bandwidth, we will have to multiply the number of vertices per batch (buffer size), but the content of these vertices. For our experiment, we used unlit, untextured triangles. Thus, the inofrmation hold by each vertex is the position (x,y,z,w) and its color (r,g,b). Each of these are 4 bytes which gives a total of 28 bytes per vertex. Thus, the bandwidth at the turnaround point 448 bytes/batch. 
+
+
 
 %========================= Batch Size TStrip Triangles====================================%
 \subsection{Geometry Rate Vs. Fill Rate for Varying Texture Size:}
-The final experiment was conduced to characterize the texture size and understand how it affects the performance. We used \protect{\wes} to vary the size of the texture image from $4\times4$ texels to $64\times64$ texels and recorded the vertex, fill, and triangles rates for two different triangle size as shown in Figure \ref{fig:fill_geo5}. We notice degradation in both the vertex rate and fill rate as the size of texture size increases. The decline in vertex rate (and triangle rate) is less dramatic than fill rate. For both vertex and fill rate, we assume the performance declines due to caching. For smaller texture size, the texture image can fit in the texture cache memory. Thus, the performance is limited by the operation itself. For larger texture size, the texture memory bandwidth is the bottleneck due to the repeated look-ups since the texture image could not be resident in the cache all the time. For fill rate, we would expect that the fill rate would remain constant for a range of texture size after which the fill rate would fall. Such a value would give an indication for the texture memory cache. But it looks like the cache is optimized (e.g. pre-fetching) such that the degradation in performance as the texture size increases is less dramatic. 
+The final experiment was conduced to characterize the texture size and understand how it affects the performance. We used \protect{\wes} to vary the size of the texture image from $2^{3}\times2^{3}$ texels to $2^{12}\times2^{12}$ texels and recorded the vertex, fill, and triangles rates as shown in Figure \ref{fig:fill_geo4}(b). We notice degradation in both the vertex rate and fill rate as the size of texture size increases. The decline in vertex rate (and triangle rate) is less dramatic than fill rate. For both vertex and fill rate, we assume the performance declines due to caching. For smaller texture size, the texture image can fit in the texture cache memory. Thus, the performance is limited by the operation itself. For larger texture size, the texture memory bandwidth is the bottleneck due to the repeated look-ups since the texture image could not be resident in the cache all the time. For fill rate, we would expect that the fill rate would remain constant for a range of texture size after which the fill rate would fall. Such a value would give an indication for the texture memory cache. But it looks like the cache is optimized (e.g. pre-fetching) such that the degradation in performance as the texture size increases is less dramatic. 
 
 \begin{figure}[!tbh]
- \centering  
- \subfloat[Triangle area = $2^{7}$ pixels]
-   {\includegraphics[width=0.49\linewidth]{fig/texture2_7.pdf}}
- \subfloat[Triangle area = $2^{14}$ pixels]
-    {\includegraphics[width=0.49\linewidth]{fig/texture2_14.pdf}}    
+ \centering   
+ \subfloat[Varying buffer size]
+    {\includegraphics[width=0.49\linewidth]{fig/bucket.pdf}} 
+ \subfloat[Varying texture size]
+   {\includegraphics[width=0.49\linewidth]{fig/texture2_7.pdf}}   
   \caption{Performance of varying the texture size while fixing the triangle are to $2^{7}$ pixels (a) and $2^{14}$ pixels (b) in millions of vertices per second, millions of triangle per second, and millions of fragments per second. }
-   \label{fig:fill_geo5}
+   \label{fig:fill_geo4}
 \end{figure} 
