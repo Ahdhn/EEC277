@@ -104,7 +104,7 @@ int main()
 	}
 	// Fragment shader
 	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+	glShaderSource(fragmentShader, 1, &fragmentShaderSource1, NULL);
 	glCompileShader(fragmentShader);
 	// Check for compile time errors
 	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
