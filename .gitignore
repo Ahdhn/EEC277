@@ -6,6 +6,7 @@
 *.synctex.gz
 *.brf
 *.lbl
+*.dvi
 .DS_Store
 HW/blah/
 HW/HW2/wesbench/eec277-w17/MywesBench

@@ -22,7 +22,7 @@
   blending, and fill. Overall GPU rendering performance is a function of throughput of both these interdependent stages: if one stage is slower than the other, the faster stage will be forced to run more slowly and overall rendering performance will be adversely affected. This relationship is commutative: if the later stage has a greater workload than the earlier stage, the earlier stage will be forced to “slow down.” For example, a large triangle that covers many screen pixels will incur a very small amount of work in the vertex stage while at the same time incurring a relatively large amount of work in the fragment stage. Rendering performance of a scene consisting of many large-area triangles will be limited by throughput of the fragment stage, which will have relatively more work than the vertex stage. There are two main objectives for this document. First, we introduce a new graphics benchmark, wesBench, which is useful for measuring performance of both stages of the rendering pipeline under varying conditions. Second, we present its methodology for measuring performance and show results of several performance measurement studies aimed at producing better understanding of GPU rendering performance characteristics and limits under varying configurations. First, in Section 2, we explore the “crossover” point between geometry and rasterization. Second, in Section 3, we explore additional performance characteristics, some of which are ill- or un-documented. Lastly, several appendices provide additional material concerning problems with the gfxbench benchmark, and details about the new wesBench graphics benchmark.}, 
   author={Bethel, Edward W}, 
   year={2010}, 
-  month={Jan}
+  month={January}
   }
  @book{akenine2008real,
   title={Real-time rendering},
@@ -30,4 +30,10 @@
   year={2008},
   edition={third},
   publisher={CRC Press}
+}
+@article{whitehead2011precision,
+  title={Precision \& performance: Floating point and {IEEE} 754 compliance for {NVIDIA} {GPU}s},
+  author={Whitehead, Nathan and Fit-Florea, Alex},
+  journal={NVIDIA Technical White Paper},  
+  year={2011}
 }
