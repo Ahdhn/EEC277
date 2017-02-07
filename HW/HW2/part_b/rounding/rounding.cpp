@@ -1,3 +1,6 @@
+//Detect Precision via Shader Program
+//By Mohamed El-Bana 
+
 #include <iostream>
 #include <cmath>
 
@@ -23,23 +26,6 @@ const GLchar* vertexShaderSource =
 "{\n"
 "	gl_Position = vec4(position.x, position.y, position.z, 1.0);\n"
 "}\0";
-
- 
-//https://community.arm.com/graphics/b/blog/posts/benchmarking-floating-point-precision-in-mobile-gpus---part-ii
-const GLchar* fragmentShaderSource =
-"#version 330 core\n"
-"void main(void)\n"
-"{\n"
-"	float y = (gl_FragCoord.y / 600) * 26.0;\n"
-"	float x = 1.0 - (gl_FragCoord.x / 800);\n"
-"	float p = pow(2.0, floor(y));\n"
-"	float b = (p + x) - p;\n"
-"	if (fract(y) >= 0.9)\n"
-"		b = 0.0;\n"
-"	gl_FragColor = vec4(b, b, b, 1.0);\n"
-"}\n";
-
-
 
 //http://www.youi.tv/mobile-gpu-floating-point-accuracy-variances/
 const GLchar* fragmentShaderSource1 =
@@ -71,7 +57,7 @@ int main()
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
 	// Create a GLFWwindow object that we can use for GLFW's functions
-	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Precision Fragment Shader", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Precision Fragment Shader - NVIDIA GeForce GT 610", nullptr, nullptr);
 	glfwMakeContextCurrent(window);
 
 	// Set the required callback functions

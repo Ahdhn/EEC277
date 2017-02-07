@@ -1,8 +1,7 @@
 \section*{Appendix}
-%=======================some insights over wesBench implementatio==============================%
+%=======================Some insights over wesBench implementation==============================%
 We answer here few questions concerning the implementation of \protect{\wes}. This can be considered as the lessons we have learned after dealing with \protect{\wes} code.
 
 Using glDrawArray or glDrawElement is faster and more efficient than using glBegin, glVertex, glEnd. Basically, using glDrawXXX allows us to use the notion of Vertex Buffer Object (VBO) which treats a set of vertices as one group as opposed to the direct mode of processing one vertex at a time. Using VBO shows improved performance when using large batches of vertices. Also using the VBO comes in handy with programmable shading. We can write a shader program to specify how our pipeline should manipulate the vertices’ attributes and that will apply to all elements in the VBO automatically. The old school, now deprecated, glBegin/glEnd approach relays on explicitly describing the attributes of each vertex. In \protect{\wes}, they use VBOs to send data to the GPU as a single array contains position data followed by color data, etc. This allows making one function call to draw the arrays rather than several calls.
 \protect{\wes} is actually drawing its geometry by constructing a $M\times M$ mesh of points that are positioned to fill one quarter of the screen resolution. The spacing between vertices in that mesh is specified by user inputted area of the triangles. This mesh is converted in the pipeline to fragments. \protect{\wes} makes sure that all the fragments should remain visible while rotating the mesh about the center of the screen for user-specified time duration.
 
-\ahmed{TODO: Add an example for how addition in floating point could cause loss in precision.}
