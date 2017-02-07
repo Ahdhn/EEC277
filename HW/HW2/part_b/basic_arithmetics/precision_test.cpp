@@ -1,15 +1,8 @@
 #include "precision_test.h" 
 
-int main()
-{
-	std::string ops[] = { "SIN", "COS", "RSQ" , "LG2", "EX2" };
-	float test_start = 0.1;
-	float test_end = 100;
-	float step = 0.2;
-	bool print_output = true;
-	double average_error[5];
-	int count = 0;
 
+
+GLFWwindow* initialize_glew() {
 
 	// openGl window initialization
 	glfwInit();
@@ -27,42 +20,82 @@ int main()
 	if (glewInit() != GLEW_OK)
 	{
 		std::cout << "Failed to initialize GLEW" << std::endl;
-		return -1;
+		exit(1);
 	}
 	///// end of the initi
-	/////////////////////////////////////////
-	//		Main testing
-	//////////////////////////////////////
-	//for testing and experimenting with one operation
-	if (0) {
-		double relative_error = get_error(window, ops[0], 0.1, print_output);
-		std::cout << "The relative error for operation " << ops[0] << " equal " << relative_error << std::endl;
-	}//if 
+	return window;
+}
 
-	//to run the full test
-	if (1)
-	{
-		for (int n = 0; n < 5; n++) 
-		{
-			for (float i = test_start; i < test_end; i += step) 
-			{
-				count++;
-				double relative_error = get_error(window, ops[n], i, print_output);
-				if (print_output)
-					std::cout << "The relative error for operation " << ops[n] << ", at input " << i << " equal " << relative_error << std::endl;
-				average_error[n] = average_error[n]+ relative_error;
-			}//for each iteration 
-			average_error[n] = average_error[n] / count;
-			std::cout << "The average relative error for " << ops[n] << " is " << average_error[n] << std::endl << std::endl;
-		}//for each operation
-	}//run full test at once
+
+int main()
+{
+	std::string ops[] = { "SIN", "COS" , "LG2", "EX2" };
+ 	bool print_output = false;
+	double result = 0;
+	std::ofstream file_t("final_average_relative_error.txt",std::ios::out);
+	file_t.precision(30);
+	file_t << "\nThis file have the values of the average realtive error" << std::endl;
+
 	
-	//close the window
-	glfwTerminate();
+		//std::string ops[] = { "SIN", "COS" , "LG2", "EX2" };
+		//void run_test(std::string op, float start_test, float end_test, float step);
 
-	return 0;
-}//main
+		GLFWwindow* window = initialize_glew();
+		result = run_test(window, ops[0], 0.01, 7.2831, 0.001, print_output);
+		file_t << "Sin, " << result<<std::endl;
+ 
+		result=run_test(window, ops[1], 0.01, 7.2831, 0.001, print_output);
+		file_t << "Cos, " << result << std::endl;
 
+		result = run_test(window, ops[2], 0.1, 100, 0.05, print_output);
+		file_t << "Log2, " << result << std::endl;
+
+		result = run_test(window, ops[3], 0.1, 100, 0.05, print_output);
+		file_t << "Power2, " << result << std::endl;
+
+		file_t.close();
+		return 0;
+	}//main
+
+
+double run_test(GLFWwindow* window, std::string op, float test_start, float test_end, float step, bool print_output) {
+
+	std::ofstream file_t(op, std::ios::out);
+	file_t.precision(30);
+	file_t << "Relative error for "<<op << ", test started with input "<< test_start<<" ended at "<< test_end <<" with a step of "<<step <<std::endl;
+
+		double sum_gpu = 0;
+		double sum_cpu = 0;
+		double max_error = 0;
+
+		for (float i = test_start; i < test_end; i += step)
+		{
+ 
+			float gpu_result = get_gpu_result(window, op, i);
+			double cpu_result = CalculateCPUValue(op, i);
+			sum_gpu +=  fabs(gpu_result);
+			sum_cpu +=  fabs(cpu_result);
+			//calulating the relative error 
+			double absolute_error = fabs( fabs(cpu_result) - fabs(gpu_result));
+			double relative_error = (absolute_error == 0.0) ? 0.0 : fabs(absolute_error / cpu_result);
+			relative_error = (relative_error > 1.0) ? 1.0 : relative_error;
+			file_t << relative_error << std::endl;
+			if (relative_error > max_error)
+				max_error = relative_error;		
+
+			if (print_output)
+				std::cout << "CPU: " << cpu_result << " GPU: " << gpu_result << " relative errror: "<< relative_error << std::endl;
+		}//for each iteration 
+		double temp = fabs(sum_cpu - sum_gpu);
+		double average_error = temp / sum_cpu;
+		std::cout << "The average relative error for " << op << " is " << average_error << std::endl;
+		file_t << "The average relative error for " << op << " is " << average_error << std::endl;
+		file_t << "The max realtive error for " << op << " is " << max_error << std::endl ;
+		file_t.close();
+
+		return average_error;
+
+}
 
 /*This function calculates the given operation on the CPU*/
 double CalculateCPUValue(std::string op, float x) {
@@ -102,7 +135,7 @@ std::string get_frg_shader(std::string op)
 
 
  /*This function returns the relative error between the CPU and the GPU for a cerain operation*/
-double get_error(GLFWwindow* window, std::string op, float input_number, bool print_output )
+float get_gpu_result(GLFWwindow* window, std::string op, float input_number )
 {
 	std::string shader = get_frg_shader(op);
 	float gpuResult = 0;
@@ -245,16 +278,7 @@ double get_error(GLFWwindow* window, std::string op, float input_number, bool pr
 	//read the a GL_RED (color.X) of one pixel on the triangle
 	glReadPixels(300, 300, 1, 1, GL_RED, GL_FLOAT, &gpuResult);
 
-	//calculating the CPU result and the error
-	cpuResult = CalculateCPUValue(op, input_number);
-	double absolute_err = fabs(cpuResult - gpuResult);
-	double relative_err = (absolute_err == 0.0) ? 0.0 : fabs(absolute_err / cpuResult);
-	// limit
-	relative_err = (relative_err > 1.0) ? 1.0 : relative_err;
 	
-	//print the final result
-	if (print_output)
-		std::cout << "CPU: "<< cpuResult<< " GPU: " << gpuResult << std::endl;
 
 	//Cleaning up
 	glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, 0);
@@ -267,7 +291,7 @@ double get_error(GLFWwindow* window, std::string op, float input_number, bool pr
 
 
 
-	return relative_err;
+	return gpuResult;
 
 }//get_error()
 

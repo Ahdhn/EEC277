@@ -1,3 +1,6 @@
+#define _CRT_SECURE_NO_DEPRECATE
+#include <stdio.h>
+#include <fstream>
 #include <iostream>
 #include <cstdlib>
 #include <cmath>
@@ -44,12 +47,14 @@ const GLchar* vertexShaderSource = "#version 330 core\n"
 /////////////////////////////////////////////////////////////////
 
 /*This function returns the relative error between the CPU and the GPU for a cerain operation*/
-double get_error(GLFWwindow* window, std::string op, float input_number, bool print_output);
+float get_gpu_result(GLFWwindow* window, std::string op, float input_number);
 /*This function edit the fragment shader string to be used with any arithmetic operation*/
 std::string get_frg_shader(std::string op);
 /*This function calculates the given operation on the CPU*/
 double CalculateCPUValue(std::string op, float x);
 
+double run_test(GLFWwindow* window, std::string op, float start_test, float end_test, float step, bool print_out);
+GLFWwindow* initialize_glew();
 
 //Struct to save the frame buffers
 typedef struct {
