@@ -1,12 +1,36 @@
 \section{Part B}
 %=========================Intro====================================%
-So far the characterization of the graphics card performance was in terms of the speed of operations. Now we turn to characterize the quality, specifically the arithmetic precision. This is considered a crucial since the speed render irrelevant if the results are not accurate. Even under the IEEE-754 Standards, identical operations could produce different results when operated on two different machines (e.g. floating point addition is not associative). 
+So far the characterization of the graphics card performance was in terms of the speed of operations. Now we turn to characterize the quality, specifically the precision of the native arithmetic operations. Precision is crucial because the speed render irrelevant if the results are not accurate. Even under the IEEE-754 Standards, identical operations could produce different results when executed on two different machines because of different hardware implementation and the peculiar nature of floating points operations (e.g. floating point addition is not associative). 
 
-In this section, we start by quantifying the error of the basic arithmetic operations offered by OpenGL. We compare GPU's results with the CPU to measure the error. We also try to discover a precision-related undocumented features; how rounding is implemented in our graphic card. 
+In this section, we start by quantifying the error of the native arithmetic operations. We compare GPU's results with the CPU to measure the error. We also try to discover a precision-related undocumented features; how rounding is implemented in our graphic card. 
 
 %=========================Arithmetic Opt====================================%
 \subsection{Arithmetic Operations Accuracy:}
-Here we test a range of basic arithmetic operation offered by OpenGL and GLSL. Taking the CPU results as our datum, the absolute relative error between the GPU's results and CPU's results represents the GPU errors. The rationale behind this method is that both CPU and GPU are compliant with IEEE-754 Standard. %We will revisit this idea in Section \ref{sec:dot}, where we see careful implementation could make the graphic card more accurate. 
+Here we test a range of basic float point arithmetic operation offered by the GPU. Taking the CPU results as our datum, the absolute relative error between the GPU's results and CPU's results represents the GPU errors. The rationale behind this method is that both CPU and GPU are compliant with IEEE-754 Standard. %We will revisit this idea in Section \ref{sec:dot}, where we see careful implementation could make the graphic card more accurate. 
+Our approach was to write an OpenGl code that utilizes fragment shaders to perform the arithmetic operations. Basically, we send floating point value to the GPU as a color component of pixels, then perform a basic operation on it, and finally we can read the pixel's final color component that we applied the shader to. Initially we wanted to use GLSL to write our fragment shader; however, we wanted to directly access the GPU hardware to eliminate any source of error that may stems from different software configurations or optimization. That's why we decided to use Shader Assembly Language ARB to impelment our fragment shader. That way we can guarantee that the GPU is only doing precisely what we ask it to do (eg: calculating the Sin of a number). Using ARB instructions, we were able to quantify the error in Sin, Cos, Power, Log, and Square root functions. 
+
+
+\begin{figure}[!tbh]
+ \centering  
+    {\includegraphics[width=1.0\linewidth]{fig/histogram_comparison.pdf}}    
+  \caption{The average of the realative error and the maximum error between the native arithmetic function that we tested }
+   \label{fig:histogram_comparison}
+\end{figure} 
+
+We conduct the test for each of our functions by giving it a series of inputs starting from 0.1 and ending at 100 with an increment of 0.01 between each input values. Then we calculate how much the GPU results deviate form the CPU results and average that thoughout our iterations. Also we keep track of the maximum instance of error to give us an idea of how bad the worest case scenario can be. From figure 5 we can conclude that the sinusoidal fuction usually have higher error on our GPU. The average relative error for Sin was the highest among all fuctions also it had the worest case scenario ever. On the other hand the logarithmic function had the least error among all functions. However, the maximum value of the error of the log function was almost 1000 times as much as the average case. We can infer that the GPU implementation of the log is not as reliable as the other fuctions since some time its precision can vary dramatically.
+
+\begin{figure}[!tbh]
+ \centering  
+ \subfloat[ ]
+   {\includegraphics[width=0.49\linewidth]{fig/error_trend1.pdf}}
+ \subfloat[ ]
+    {\includegraphics[width=0.49\linewidth]{fig/error_trend2.pdf}}    
+  \caption{The error trend accross our testing space }
+   \label{fig:fill_geo3}
+\end{figure}
+
+Another important metric that we need to examine is how the precision of each of our operations get affected by increasing the value on the input. In other words, we need to figure our if there is a certain trend for the error in each our functions. Figure 6 shows samples of the relative error throughout our testing space. 
+
 
 %=========================Dot Product====================================%
 %\subsection{Dot Product}\label{sec:dot}
