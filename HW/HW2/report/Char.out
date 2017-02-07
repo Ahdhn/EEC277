@@ -1,0 +1,15 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [1][-]{section.2}{Part A}{}% 2
+\BOOKMARK [2][-]{subsection.2.1}{Geometry Rate Vs. Fill Rate:}{section.2}% 3
+\BOOKMARK [2][-]{subsection.2.2}{Geometry Rate Vs. Fill Rate on Lit Triangles:}{section.2}% 4
+\BOOKMARK [2][-]{subsection.2.3}{Geometry Rate Vs. Fill Rate on Textured Triangles:}{section.2}% 5
+\BOOKMARK [2][-]{subsection.2.4}{Geometry Rate Vs. Fill Rate on Lit, Textured Triangles:}{section.2}% 6
+\BOOKMARK [2][-]{subsection.2.5}{Geometry Rate Vs. Fill Rate for Strips Vs. Disjoint Triangles:}{section.2}% 7
+\BOOKMARK [2][-]{subsection.2.6}{Geometry Rate Vs. Fill Rate for Indexed Disjoint Vs. Disjoint Triangles:}{section.2}% 8
+\BOOKMARK [2][-]{subsection.2.7}{Geometry Rate Vs. Fill Rate for Varying Batch Size:}{section.2}% 9
+\BOOKMARK [2][-]{subsection.2.8}{Geometry Rate Vs. Fill Rate for Varying Texture Size:}{section.2}% 10
+\BOOKMARK [1][-]{section.3}{Part B}{}% 11
+\BOOKMARK [2][-]{subsection.3.1}{Arithmetic Operations Accuracy:}{section.3}% 12
+\BOOKMARK [2][-]{subsection.3.2}{Detect Precision via Shader Program}{section.3}% 13
+\BOOKMARK [3][-]{subsubsection.3.2.1}{Compliance with IEEE-754}{subsection.3.2}% 14
+\BOOKMARK [3][-]{subsubsection.3.2.2}{Rounding Algorithm}{subsection.3.2}% 15
