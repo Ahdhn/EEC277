@@ -1,66 +1,42 @@
 #include "precision_test.h" 
 
-
-
-GLFWwindow* initialize_glew() {
-
-	// openGl window initialization
-	glfwInit();
-	// Set all the required options for GLFW
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-	// Create a GLFWwindow object that we can use for GLFW's functions
-	GLFWwindow* window = glfwCreateWindow(800, 600, "Precision Test", nullptr, nullptr);
-	glfwMakeContextCurrent(window);
-
-	glewExperimental = GL_TRUE;
-	if (glewInit() != GLEW_OK)
-	{
-		std::cout << "Failed to initialize GLEW" << std::endl;
-		exit(1);
-	}
-	///// end of the initi
-	return window;
-}
-
-
 int main()
 {
-	std::string ops[] = { "SIN", "COS" , "LG2", "EX2" };
+	std::string ops[] = { "SIN", "COS" , "LG2", "EX2", "SQRT" };
  	bool print_output = false;
 	double result = 0;
-	std::ofstream file_t("final_average_relative_error.txt",std::ios::out);
-	file_t.precision(30);
-	file_t << "\nThis file have the values of the average realtive error" << std::endl;
-
-	
-		//std::string ops[] = { "SIN", "COS" , "LG2", "EX2" };
-		//void run_test(std::string op, float start_test, float end_test, float step);
+ 
+	float start = 0.1;
+	float end = 100;
+	float step = 0.01;
 
 		GLFWwindow* window = initialize_glew();
-		result = run_test(window, ops[0], 0.01, 7.2831, 0.001, print_output);
-		file_t << "Sin, " << result<<std::endl;
+		result = run_test(window, ops[0], start, end, step, print_output);
  
-		result=run_test(window, ops[1], 0.01, 7.2831, 0.001, print_output);
-		file_t << "Cos, " << result << std::endl;
-
-		result = run_test(window, ops[2], 0.1, 100, 0.05, print_output);
-		file_t << "Log2, " << result << std::endl;
-
-		result = run_test(window, ops[3], 0.1, 100, 0.05, print_output);
-		file_t << "Power2, " << result << std::endl;
-
-		file_t.close();
+		glfwTerminate();
+		window = initialize_glew();
+		result = run_test(window, ops[1], start, end, step, print_output);
+ 
+		glfwTerminate();
+		window = initialize_glew();
+		result = run_test(window, ops[2], start, end, step, print_output);
+ 
+		glfwTerminate();
+		window = initialize_glew();
+		result = run_test(window, ops[3], start, end, step, print_output);
+ 
+		glfwTerminate();
+		window = initialize_glew();
+		result = run_test(window, ops[4], start, end, step, print_output);
+ 
+			glfwTerminate();
 		return 0;
 	}//main
 
 
 double run_test(GLFWwindow* window, std::string op, float test_start, float test_end, float step, bool print_output) {
-
-	std::ofstream file_t(op, std::ios::out);
+	std::string filename = get_file_name(op);
+	std::ofstream file_t(filename.c_str(), std::ios::out);
 	file_t.precision(30);
 	file_t << "Relative error for "<<op << ", test started with input "<< test_start<<" ended at "<< test_end <<" with a step of "<<step <<std::endl;
 
@@ -97,6 +73,32 @@ double run_test(GLFWwindow* window, std::string op, float test_start, float test
 
 }
 
+
+GLFWwindow* initialize_glew() {
+
+	// openGl window initialization
+	glfwInit();
+	// Set all the required options for GLFW
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+	// Create a GLFWwindow object that we can use for GLFW's functions
+	GLFWwindow* window = glfwCreateWindow(50, 50, "Precision Test", nullptr, nullptr);
+	glfwMakeContextCurrent(window);
+
+	glewExperimental = GL_TRUE;
+	if (glewInit() != GLEW_OK)
+	{
+		std::cout << "Failed to initialize GLEW" << std::endl;
+		exit(1);
+	}
+	///// end of the initi
+	return window;
+}//initialize_glew
+
+
 /*This function calculates the given operation on the CPU*/
 double CalculateCPUValue(std::string op, float x) {
 
@@ -104,8 +106,8 @@ double CalculateCPUValue(std::string op, float x) {
 		return sin(x);
 	else if (!op.compare("COS"))
 		return cos(x);
-	else if (!op.compare("RSQ"))
-		return 1/ sqrt(x);
+	else if (!op.compare("SQRT"))
+		return sqrt(x);
 	else if (!op.compare("EX2"))
 		return pow(2,x);
 	else if (!op.compare("LG2"))
@@ -115,19 +117,43 @@ double CalculateCPUValue(std::string op, float x) {
 
 }//CalculateCPUValue
 
+std::string get_file_name(std::string op) {
+
+	if (!op.compare("SIN"))
+		return "sin.txt";
+	else if (!op.compare("COS"))
+		return "cos.txt";
+	else if (!op.compare("SQRT"))
+		return "square_root.txt";
+	else if (!op.compare("EX2"))
+		return "power2.txt";
+	else if (!op.compare("LG2"))
+		return "log2.txt";
+	else
+		return  "unknown.txt";
+
+}//CalculateCPUValue
+
+
 /*This function edit the fragment shader string to be used with any arithmetic operation*/
 std::string get_frg_shader(std::string op)
 {
-	std::string shader(FRAGMENT_SHADER);
-	std::string search("---");
-	std::string replace = op;
-	int pos = 0;
+	std::string shader;
+	if (!op.compare("SQRT")) 
+			shader=FRAGMENT_SHADER_SQRT;
+	else{
+			shader=FRAGMENT_SHADER;
+			std::string search("---");
+			std::string replace = op;
+			int pos = 0;
 
-	while ((pos = shader.find(search, pos)) != std::string::npos)
-	{
-		shader.replace(pos, search.length(), replace);
-		pos += replace.length();
-	}//while
+			while ((pos = shader.find(search, pos)) != std::string::npos)
+			{
+				shader.replace(pos, search.length(), replace);
+				pos += replace.length();
+			}//while
+
+	}//else
 
 	return shader;
 
@@ -140,16 +166,10 @@ float get_gpu_result(GLFWwindow* window, std::string op, float input_number )
 	std::string shader = get_frg_shader(op);
 	float gpuResult = 0;
 	double cpuResult = 0;
-
-
-	///////////////////////////////////////////////////////////////
 	int width, height;
-	glfwGetFramebufferSize(window, &width, &height);
 
+	glfwGetFramebufferSize(window, &width, &height);
 	glViewport(0, 0, width, height);
-	//Set up
-	
-	// Build and compile our shader program
 	// Vertex shader
 	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
@@ -164,7 +184,6 @@ float get_gpu_result(GLFWwindow* window, std::string op, float input_number )
 		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
 	}
 
-
 	// Link shaders
 	GLuint shaderProgram = glCreateProgram();
 	glAttachShader(shaderProgram, vertexShader);
@@ -178,28 +197,35 @@ float get_gpu_result(GLFWwindow* window, std::string op, float input_number )
 	glDeleteShader(vertexShader);
 	// Set up vertex data (and buffer(s)) and attribute pointers
 	GLfloat vertices[] = {
-		// Positions        
-		0.5f, -0.5f, 0.0f,  // Bottom Right
-		-0.5f, -0.5f, 0.0f,  // Bottom Left
-		0.0f,  0.5f, 0.0f   // Top 
+		1.0f,  1.0f, 0.0f,  // Top Right
+		1.0f, -1.0f, 0.0f,  // Bottom Right
+		-1.0f, -1.0f, 0.0f,  // Bottom Left
+		-1.0f,  1.0f, 0.0f   // Top Left 
 	};
-	GLuint VBO, VAO;
+	GLuint indices[] = {  // Note that we start from 0!
+		0, 1, 3,  // First Triangle
+		1, 2, 3   // Second Triangle
+	};
+	GLuint VBO, VAO, EBO;
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &EBO);
 	// Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
 	glBindVertexArray(VAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	// Position attribute
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(0);
 
-	glBindVertexArray(0); // Unbind VAO
+	glBindBuffer(GL_ARRAY_BUFFER, 0); // Note that this is allowed, the call to glVertexAttribPointer registered VBO as the currently bound vertex buffer object so afterwards we can safely unbind
 
-	glDrawBuffer(GL_FRONT);
-	glReadBuffer(GL_FRONT);
+	glBindVertexArray(0); // Unbind VAO (it's always a good thing to unbind any buffer/array to prevent strange bugs), remember: do NOT unbind the EBO, keep it bound to this VAO
+ 
 	glDisable(GL_DEPTH_TEST);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -230,9 +256,7 @@ float get_gpu_result(GLFWwindow* window, std::string op, float input_number )
 	//glUseProgram(PID);
 	// passing the input to the shader's uniform (local parameter)
 	glProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 0, input_number, 0, 0, 0);
-
-
-
+ 
 	GLint maxRenderBufferSize;
 
 	glGetIntegerv(GL_MAX_RENDERBUFFER_SIZE, &maxRenderBufferSize);
@@ -266,21 +290,20 @@ float get_gpu_result(GLFWwindow* window, std::string op, float input_number )
 
 	//check
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		std::cout << "CAN'T INIT RENDER TARGET" << std::endl;
+		std::cout << "CAN'T INIT RENDER TARGET2" << std::endl;
 
 	// passing the input to the shader's uniform (local parameter)
 	glProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB , 0, input_number , 0, 0, 0);
   
 	// Draw the triangle
 	glBindVertexArray(VAO);
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
 	//read the a GL_RED (color.X) of one pixel on the triangle
-	glReadPixels(300, 300, 1, 1, GL_RED, GL_FLOAT, &gpuResult);
-
-	
-
+	glReadPixels(10, 10, 1, 1, GL_RED, GL_FLOAT, &gpuResult);
+ 
 	//Cleaning up
+	glfwSwapBuffers(window);
 	glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, 0);
 	glDisable(GL_FRAGMENT_PROGRAM_ARB);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -288,9 +311,10 @@ float get_gpu_result(GLFWwindow* window, std::string op, float input_number )
 	glDeleteFramebuffers(1, &(mFrameBuffer.frameBuffer));
 	glDeleteTextures(1, &(mFrameBuffer.texture));
 	glDeleteProgramsARB(1, &PID);
-
-
-
+	glDeleteVertexArrays(1, &VAO);
+	glDeleteBuffers(1, &VBO);
+	glDeleteBuffers(1, &EBO);
+ 
 	return gpuResult;
 
 }//get_error()

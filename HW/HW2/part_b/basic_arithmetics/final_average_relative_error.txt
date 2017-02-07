@@ -1,6 +1,0 @@
-
-This file have the values of the average realtive error
-Sin, 1.3691021554667434e-007
-Cos, 9.6991579862361061e-008
-Log2, 3.0874459161655722e-008
-Power2, 3.7720680182607877e-008

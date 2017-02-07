@@ -28,6 +28,15 @@ const static std::string FRAGMENT_SHADER =
 "MOV result.color, R0; \n"			// output our temp variable as the color attribute of the fragment program result
 "END\n";
 
+const static std::string FRAGMENT_SHADER_SQRT =
+"!!ARBfp1.0\n"						// declear the an ARB fragment Program  
+"TEMP R0; \n"						// create an temp register
+"TEMP R1; \n"						// create an temp register
+"PARAM c0 = program.local[0]; \n"	// getting the local parameter 0 that has been passed to the program (input)
+"RSQ R0.x, c0.x; \n"				// 
+"RCP R1.x, R0.x; \n"				// 
+"MOV result.color, R1; \n"			// output our temp variable as the color attribute of the fragment program result
+"END\n";
 
 /*
 //Vertex shadder that does nothing but passing the vertices
@@ -55,6 +64,7 @@ double CalculateCPUValue(std::string op, float x);
 
 double run_test(GLFWwindow* window, std::string op, float start_test, float end_test, float step, bool print_out);
 GLFWwindow* initialize_glew();
+std::string get_file_name(std::string op);
 
 //Struct to save the frame buffers
 typedef struct {
