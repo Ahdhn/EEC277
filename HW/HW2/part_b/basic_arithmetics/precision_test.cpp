@@ -79,7 +79,7 @@ double run_test(GLFWwindow* window, std::string op, float test_start, float test
 			double absolute_error = fabs( fabs(cpu_result) - fabs(gpu_result));
 			double relative_error = (absolute_error == 0.0) ? 0.0 : fabs(absolute_error / cpu_result);
 			relative_error = (relative_error > 1.0) ? 1.0 : relative_error;
-			file_t << relative_error << std::endl;
+			file_t << relative_error << "	" << i << std::endl;
 			if (relative_error > max_error)
 				max_error = relative_error;		
 
