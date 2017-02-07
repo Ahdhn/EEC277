@@ -20,7 +20,7 @@ Our approach was to write an OpenGl code that utilizes fragment shaders to perfo
    \label{fig:histogram_comparison}
 \end{figure} 
 
-We conducted the test for each of our functions by giving it a series of inputs starting from 0.1 and ending at 100 with an increment of 0.01 between each input values. Then we calculated how much the GPU results deviate from the CPU results and averaged that throughout our iterations. Also we kept track of the maximum instance of error to give us an idea of how bad the worst case scenario can be. From figure 5b we can conclude that the sinusoidal functions usually have higher error on our GPU. The average relative error for Cos was the highest among all functions. In addition, Sin had the worst case scenario ever. On the other hand, the Square root function had the least error among all functions. It's worth mentioning that in the logarithmic function, the maximum value of the error of the log function was almost 1 million times as much as the average case. We can infer that the GPU implementation of the log is not as reliable as the other functions since some time its precision can vary dramatically.
+We conducted the test for each of our functions by giving it a series of inputs starting from 0.1 and ending at 100 with an increment of 0.01 between each input values. Then we calculated how much the GPU results deviate from the CPU results and averaged that throughout our iterations. Also we kept track of the maximum instance of error to give us an idea of how bad the worst case scenario can be. From figure 5b we can conclude that the sinusoidal functions usually have higher error on our GPU. The average relative error for Cos was the highest among all functions. In addition, Sin had the worst case scenario ever. On the other hand, the square root function had the least error among all functions. It's worth mentioning that in the logarithmic function, the maximum value of the error was almost 1 million times as much as the average case. We can infer that the GPU implementation of the log is not as reliable as the other functions since some time its precision can vary dramatically.
 
 \begin{figure}[!tbh]
  \centering  
@@ -32,7 +32,7 @@ We conducted the test for each of our functions by giving it a series of inputs 
    \label{fig:fill_geo3}
 \end{figure}
 
-Another important metric that we need to examine is how the precision of each of our operations get affected by increasing the value on the input. In other words, we need to figure our if there is a certain trend for the error in each our functions. Figure 6 shows samples of the relative error throughout our testing space. 
+Another important metric that we need to examine is how the precision of each of our operations get affected by increasing the value on the input. In other words, we need to figure out if there is a certain trend for the error in each of our functions. Figure 6 shows samples of the relative error throughout our testing space. The sin and cos remain with in the same range most of the time. The logarithmic function varied more towards the end. Also the square root operation showed a minimal error, almost zero, for most of the test time; nevertheless, the error increased at certain few input values which shows that there's a precision problem with these inputs.
 
 
 %=========================Dot Product====================================%
