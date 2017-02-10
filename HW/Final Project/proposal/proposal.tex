@@ -1,0 +1,48 @@
+%=========================Preamble====================================%
+\documentclass[12pt] {article}
+
+\usepackage{graphicx}
+\usepackage{subfig}
+\usepackage[usenames]{color}
+\usepackage[]{todonotes}
+\usepackage{blindtext}
+\usepackage{listings}
+\usepackage{hyperref}
+
+\newcommand{\yuxin}[1]{\todo[inline,color=green!30]{\textbf{mohamed:} #1}}%set command to comment
+\definecolor{figgreen}{rgb}{0,0.6,0}%set color
+
+\newcommand{\ahmed}[1]{\todo[inline,color=blue!30]{\textbf{ahmed:} #1}}%set command to comment
+\definecolor{figblue}{rgb}{0,0,1}%set color
+
+\newcommand{\final}{0}%Set to 1 to remove comments 
+
+\ifthenelse{\equal{\final}{1}}%make sure comments don't show when \final = 1
+{
+\renewcommand{\yuxin}[1]{}
+\renewcommand{\ahmed}[1]{}
+}
+
+\newcommand{\wes}{{\fontfamily{qcr}\selectfont wesBench}}
+%=========================Doc====================================%
+\begin{document}
+\title{Project Proposal - EEC 277}
+\author{Yuxin Chen and Ahmed H. Mahmoud}
+\date{21 February 2017} 
+\maketitle
+
+
+\input{background}
+
+\input{related}
+
+\input{goal}
+
+\input{milestones}
+
+
+%=========================Bib====================================%
+\bibliography{mybib}
+\bibliographystyle{IEEEtran}
+
+\end{document}
