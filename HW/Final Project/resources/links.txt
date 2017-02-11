@@ -1,1 +1,11 @@
 SIGGRAPH 2016 Course: The Quest for the Ray Tracing API <https://sites.google.com/site/raytracingapi>
+
+Multicore and GPU Programming course <http://www.computer-graphics.se/multicore/>
+
+Ray tracing with OpenGL Compute Shaders <https://github.com/LWJGL/lwjgl3-wiki/wiki/2.6.1.-Ray-tracing-with-OpenGL-Compute-Shaders-(Part-I)>
+
+Ray Tracing on GPU <http://www.cse.chalmers.se/~uffe/xjobb/Readings/GPURayTracing/Ray%20Tracing%20on%20GPU.pdf>
+
+Raytracer from Scratch in C++ <https://www.youtube.com/playlist?list=PLHm_I0tE5kKPPWXkTTtOn8fkcwEGZNETh>
+
+SIGGRAPH 2013 Course: Ray Tracing is the Future and ever will be... <https://sites.google.com/site/raytracingcourse/>
