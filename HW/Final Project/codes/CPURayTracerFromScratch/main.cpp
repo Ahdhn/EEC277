@@ -20,6 +20,7 @@
 #include "Object.h"
 #include "Plane.h"
 #include "Source.h"
+#include "Triangle.h"
 struct RGBType{
 	double r, g, b;
 };
@@ -142,7 +143,60 @@ Color getColorAt(Vect intersection_position, Vect intersection_ray_direction, st
 	Color winning_object_color = scene_objects.at(index_of_winning_object)->getColor();
 	Vect winning_object_normal = scene_objects.at(index_of_winning_object)->getNormalAt(intersection_position);
 
+	if (winning_object_color.getColorSpecial() == 2){ 
+		//checkred/tile floor pattern 
+		int square = (int)floor(intersection_position.getVectX()) + (int)floor(intersection_position.getVectZ());
+		if (square % 2 == 0){
+			//black tile 
+			winning_object_color.setColorRed(0);
+			winning_object_color.setColorGreen(0);
+			winning_object_color.setColorBlue(0);
+		}else{
+			//white tile 
+			winning_object_color.setColorRed(1);
+			winning_object_color.setColorGreen(1);
+			winning_object_color.setColorBlue(1);
+		}
+	}
+
 	Color final_color = winning_object_color.colorScalar(ambientLight);//all changes should be down to this color 
+
+	//add reflection
+	if (winning_object_color.getColorSpecial() > 0 && winning_object_color.getColorSpecial()<=1.0){
+		//reflection from objects with specular intensity 
+		double dot1 = winning_object_normal.dotProduct(intersection_ray_direction.negative());
+		Vect scalar1 = winning_object_normal.vectMult(dot1);
+		Vect add1 = scalar1.vectAdd(intersection_ray_direction);
+		Vect scalar2 = add1.vectMult(2);
+		Vect add2 = intersection_ray_direction.negative().vectAdd(scalar2);
+		Vect reflection_direction = add2.normalize();
+
+		Ray reflection_ray(intersection_position, reflection_direction);
+		//determine what the ray intersects with first
+		std::vector<double>reflection_intersections;
+		for (int reflection_index = 0; reflection_index < scene_objects.size(); reflection_index++){
+			reflection_intersections.push_back(scene_objects.at(reflection_index)->findIntersection(reflection_ray));
+		}
+
+		int index_of_winning_object_with_reflection = winningObjectIndex(reflection_intersections);
+
+		if (index_of_winning_object_with_reflection != -1){ 
+			//reflection ray missed everything else 
+			if (reflection_intersections.at(index_of_winning_object_with_reflection) > accuracy){
+				//detemine the position and direction at the point ofintersection with the reflection ray
+				//the ray only affect thet color if it refelcted off something 
+				Vect reflection_intersection_position = intersection_position.vectAdd(reflection_direction.vectMult(reflection_intersections.at(index_of_winning_object_with_reflection)));
+				Vect reflection_intersection_ray_direction = reflection_direction;
+
+				Color reflection_intersection_color = getColorAt(reflection_intersection_position, reflection_intersection_ray_direction, scene_objects, index_of_winning_object_with_reflection, light_sources, accuracy, ambientLight);
+
+				final_color = final_color.colorAdd(reflection_intersection_color.colorScalar(winning_object_color.getColorSpecial()));
+
+			}
+		}
+
+	}
+
 
 	for (int light_index = 0; light_index < light_sources.size(); light_index++){
 		Vect light_direction = light_sources.at(light_index)->getLightPosition().vectAdd(intersection_position.negative()).normalize();
@@ -153,7 +207,7 @@ Color getColorAt(Vect intersection_position, Vect intersection_ray_direction, st
 			//test for shadow
 			bool shadowed = false;
 
-			Vect distance_to_light = light_sources.at(light_index)->getLightPosition().vectAdd(intersection_position.negative()).normalize();
+			Vect distance_to_light = light_sources.at(light_index)->getLightPosition().vectAdd(intersection_position.negative());
 
 			float distance_to_light_magnitude = distance_to_light.magnitude();
 
@@ -205,10 +259,57 @@ Color getColorAt(Vect intersection_position, Vect intersection_ray_direction, st
 	return final_color.clip();
 }
 
+void makeCube(Vect corner1, Vect corner2, Color color, std::vector<Object*>&scene_objects)
+{
+	//make cube outof tirangles 
+	// corner1
+	double c1x = corner1.getVectX();
+	double c1y = corner1.getVectY();
+	double c1z = corner1.getVectZ();
+
+	// corner2
+	double c2x = corner1.getVectX();
+	double c2y = corner1.getVectY();
+	double c2z = corner1.getVectZ();
+
+	Vect A(c2x, c1y, c1z);
+	Vect B(c2x, c1y, c2z);
+	Vect C(c1x, c1y, c2z);
+
+	Vect D(c2x, c2y, c1z);
+	Vect E(c1x, c2y, c1z);
+	Vect F(c1x, c2y, c2z);
+
+	//left side 
+	scene_objects.push_back(new Triangle(D, A, corner1, color));
+	scene_objects.push_back(new Triangle(corner1, E, D, color));
+
+	//far side 
+	scene_objects.push_back(new Triangle(corner2, B, A, color));
+	scene_objects.push_back(new Triangle(A, D, corner2, color));
+
+	//right side
+	scene_objects.push_back(new Triangle(F, C, B, color));
+	scene_objects.push_back(new Triangle(B, corner2, F, color));
+
+	//front side
+	scene_objects.push_back(new Triangle(E , corner1, C, color));
+	scene_objects.push_back(new Triangle(C, F, E, color));
+
+	//top
+	scene_objects.push_back(new Triangle(D, E, F, color));
+	scene_objects.push_back(new Triangle(F, corner2, D, color));
+
+	//bottom
+	scene_objects.push_back(new Triangle(corner1, A, B, color));
+	scene_objects.push_back(new Triangle(B, C, corner1, color));
+}
 int main(int argc, char*argv[])
 {
 	std::cout << "Rendering...." << std::endl;
 
+	clock_t t1, t2;
+	t1 = clock();
 
 	int width(640), height(480), dpi(72);
 	int n = width*height;
@@ -217,11 +318,14 @@ int main(int argc, char*argv[])
 
 	double ambientLight(0.2), accuracy(0.0000001);
 
+	const int aadepth = 1;//four rays per pixels 
+	double aathreshold = 0.1;
 
 	Vect O(0, 0, 0);//sphere origin
 	Vect X(1, 0, 0); //vector for direction x,y,z
 	Vect Y(0, 1, 0);
 	Vect Z(0, 0, 1);
+	Vect new_sphere_location(1.75, 0, 0);
 
 	Vect look_at(0, 0, 0);
 
@@ -241,7 +345,9 @@ int main(int argc, char*argv[])
 	Color pretty_green(0.5, 1.0, 0.5, 0.3); //with refelctivness 
 	Color gray(0.5, 0.5, 0.5, 0);
 	Color black(0.0, 0.0, 0.0, 0.0);
-	Color maroon(0.5, 0.25, 0.25, 0);
+	Color checkerboard(0.5, 0.25, 0.25, 2);
+	Color orange(0.94, 0.75, 0.31, 0);
+	Color pretty_maroon(0.5, 0.25, 0.25, 0.4);
 
 	//create light source 
 	Vect light_position(-7, 10, -10);	
@@ -252,76 +358,147 @@ int main(int argc, char*argv[])
 
 	//scene objects	
 	Sphere scene_sphere(O, 1.0, pretty_green);
-	Plane scene_plane(Y, -1.0, maroon);
+	Sphere scene_sphere2(new_sphere_location, 0.5, pretty_maroon);
+	Plane scene_plane(Y, -1.0, checkerboard);
+	//Triangle scene_triangle(Vect(3, 0, 0), Vect(0, 3, 0), Vect(0, 0, 3), orange);
+
 	double xamnt, yamnt; //slightly to the left and right of the direction pointed at by the camera (origin)
 	std::vector<Object*>scene_objects;
 	scene_objects.push_back(dynamic_cast<Object*>(&scene_sphere));
+	scene_objects.push_back(dynamic_cast<Object*>(&scene_sphere2));
 	scene_objects.push_back(dynamic_cast<Object*>(&scene_plane));
+	//scene_objects.push_back(dynamic_cast<Object*>(&scene_triangle));
+	//makeCube(Vect(1, 1, 1), Vect(-1, -1, -1), orange, scene_objects);
 
+	int this_one, aa_index;
+	double tempRed[aadepth*aadepth];
+	double tempGreen[aadepth*aadepth];
+	double tempBlue[aadepth*aadepth];
 
 	for (int x = 0; x < width; x++){//from the left side to the right side 
 		for (int y = 0; y < height; y++){//from top to the bottom
 			thisone = y*width + x;
 
-			//start with no anti-aliasing 
-			if (width > height){
-				//the image is wider than it is tall 
-				xamnt = ((x + 0.5) / width)*aspectratio - (((width - height) / (double)height) / 2.0);
-				yamnt = ((height - y) + 0.5) / height;
-			}
-			else if (height > width){ 
-				//the image is taller than it is wide
-				xamnt = (x + 0.5) / width;
-				yamnt = (((height - y) + 0.5) / height)/aspectratio - (((height - width)/(double)width)/2);
-			}
-			else{
-				//the image is square 
-				xamnt = (x + 0.5) / width;
-				yamnt = ((height - y) + 0.5) / height;
-			}
+			
+			//these double loops for anti-aliasing 
+			for (int aax = 0; aax < aadepth;aax++){
+				for (int aay = 0; aay < aadepth; aay++){ 
 
-			//origin of the ray is the origin of the cam
-			Vect cam_ray_origin = scene_cam.getCameraPosition();
-			Vect cam_ray_direction = camdir.vectAdd(camright.vectMult(xamnt - 0.5).vectAdd(camdown.vectMult(yamnt - 0.5))).normalize();
+					aa_index = aay*aadepth + aax;
+					
+					//srand(time(0));
+					//create the ray from the camer to this pixel
 
-			Ray cam_ray(cam_ray_origin, cam_ray_direction);
+					if (aadepth == 1){ 
+						//no anti-aliasing 
+						if (width > height){
+							//the image is wider than it is tall 
+							xamnt = ((x + 0.5) / width)*aspectratio - (((width - height) / (double)height) / 2.0);
+							yamnt = ((height - y) + 0.5) / height;
+						}
+						else if (height > width){
+							//the image is taller than it is wide
+							xamnt = (x + 0.5) / width;
+							yamnt = (((height - y) + 0.5) / height) / aspectratio - (((height - width) / (double)width) / 2);
+						}
+						else{
+							//the image is square 
+							xamnt = (x + 0.5) / width;
+							yamnt = ((height - y) + 0.5) / height;
+						}
+					}
+					else{
+						//with anti-aliasing 
+						if (width > height){
+							//the image is wider than it is tall 
+							xamnt = ((x + (double)aax/((double)aadepth-1)) / width)*aspectratio - (((width - height) / (double)height) / 2.0);
+							yamnt = ((height - y) + (double)aay / ((double)aadepth - 1)) / height;
+						}
+						else if (height > width){
+							//the image is taller than it is wide
+							xamnt = (x + (double)aax / ((double)aadepth - 1)) / width;
+							yamnt = (((height - y) + (double)aay / ((double)aadepth - 1)) / height) / aspectratio - (((height - width) / (double)width) / 2);
+						}
+						else{
+							//the image is square 
+							xamnt = (x + 0.5) / width;
+							yamnt = ((height - y) + 0.5) / height;
+						}
+					}
 
-			std::vector<double> intersections;
-
-			//loop through each object and find if there is any intersection between this ray and any of the objects
-			for (int index = 0; index < scene_objects.size(); index++){
-				intersections.push_back(scene_objects.at(index)->findIntersection(cam_ray));
-			}
 
 
-			//check which object is closer 
-			int index_of_winning_object = winningObjectIndex(intersections);
+					//origin of the ray is the origin of the cam
+					Vect cam_ray_origin = scene_cam.getCameraPosition();
+					Vect cam_ray_direction = camdir.vectAdd(camright.vectMult(xamnt - 0.5).vectAdd(camdown.vectMult(yamnt - 0.5))).normalize();
 
-			if (index_of_winning_object == -1) { 
-				//set the background black
-				pixels[thisone].r = 0.0;
-				pixels[thisone].g = 0.0;
-				pixels[thisone].b = 0.0;
-			}
-			else{
-				//index coresponds to object in the scene
-				if (intersections.at(index_of_winning_object) > accuracy){ 
-					//determine the position and direction vectors at the point of intersection
-					Vect intersection_position = cam_ray_origin.vectAdd(cam_ray_direction.vectMult(intersections.at(index_of_winning_object)));
-					Vect intersection_ray_direction = cam_ray_direction;
+					Ray cam_ray(cam_ray_origin, cam_ray_direction);
 
-					Color intersection_color = getColorAt(intersection_position, intersection_ray_direction,scene_objects, index_of_winning_object,
-						                                  light_sources, accuracy, ambientLight);
+					std::vector<double> intersections;
 
-					pixels[thisone].r = intersection_color.getColorRed();
-					pixels[thisone].g = intersection_color.getColorGreen();
-					pixels[thisone].b = intersection_color.getColorBlue();
+					//loop through each object and find if there is any intersection between this ray and any of the objects
+					for (int index = 0; index < scene_objects.size(); index++){
+						intersections.push_back(scene_objects.at(index)->findIntersection(cam_ray));
+					}
+
+
+					//check which object is closer 
+					int index_of_winning_object = winningObjectIndex(intersections);
+
+					if (index_of_winning_object == -1) {
+						//set the background black						
+						tempRed[aa_index] = 0.0;
+						tempGreen[aa_index] = 0.0;
+						tempBlue[aa_index] = 0.0;
+					}
+					else{
+						//index coresponds to object in the scene
+						if (intersections.at(index_of_winning_object) > accuracy){
+							//determine the position and direction vectors at the point of intersection
+							Vect intersection_position = cam_ray_origin.vectAdd(cam_ray_direction.vectMult(intersections.at(index_of_winning_object)));
+							Vect intersection_ray_direction = cam_ray_direction;
+
+							Color intersection_color = getColorAt(intersection_position, intersection_ray_direction, scene_objects, index_of_winning_object,
+								light_sources, accuracy, ambientLight);
+														
+							tempRed[aa_index] = intersection_color.getColorRed();
+							tempGreen[aa_index] = intersection_color.getColorGreen();
+							tempBlue[aa_index] = intersection_color.getColorBlue();
+
+						}
+					}
+
 				}
 			}
-			
+
+			//avergae the pixel color
+			double totoalRed(0), totoalGreen(0), totoalBlue(0);
+			for (int iColor = 0; iColor < aadepth*aadepth; iColor++){
+				totoalRed += tempRed[iColor];
+				totoalGreen += tempGreen[iColor];
+				totoalBlue += tempBlue[iColor];
+			}
+
+			double avgRed = totoalRed / (aadepth*aadepth);
+			double avgGreen = totoalGreen / (aadepth*aadepth);
+			double avgBlue = totoalBlue / (aadepth*aadepth);
+
+			pixels[thisone].r = avgRed;
+			pixels[thisone].g = avgGreen;
+			pixels[thisone].b = avgBlue;
+
 		}
 	}
-	SaveBMP("scene.bmp", width, height, dpi, pixels);
+
+	SaveBMP("scene2.bmp", width, height, dpi, pixels);
+
+	delete pixels;
+	
+	
+	t2 = clock();
+	float diff = ((float)t2 - (float)t1) / 1000;
+	std::cout << diff << " seconds" << std::endl;
 
 	return 0;
 }
+
