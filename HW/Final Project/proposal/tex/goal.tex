@@ -2,11 +2,11 @@
 %========================= Target ====================================%
 The target of our project can be summed in the following milestone 
 \begin{enumerate}
-\item Implementing of ray tracing on fragment shader. (1 Week)
-\item Implementing uniform gird, kd-tree to accelerate the performance
+\item Implementing ray tracing on fragment shader. (1 Week)
+\item Implementing uniform gird and kd-tree to accelerate the performance
 \item Experimenting with complex scenes. (1 Week)
 \item In parallel, implementation on CUDA for final comparison between OpenGL-based and CUDA-based ray tracing.
 \item Report and presentation. (1 Week)
 \end{enumerate}
 
-\paragraph{Deliverables} We intend to deliver an explanation on why basic ray tracing using one API outperforms the other. So far, we expect that CUDA will have superior performance since so little overhead needed to carry on the computation. In contrast, OpenGL needs to go through all the pipeline stages till it reach the fragment stage. But it was observed that using OpenGL pipeline outperforms CUDA-based implementation for volume ray casting \cite{7833400}. Additionally, we are going to report our experience with KD-tree implementation within fragment shader and recursion elimination with ray casting and how they impacts the run-time and the quality of final image respectively. 
+\paragraph{Deliverables} We intend to deliver an explanation on why basic ray tracing using one API outperforms the other. So far, we expect that CUDA will have superior performance since so little overhead needed to carry on the computation. In contrast, OpenGL needs to go through all the pipeline stages till it reach the fragment stage. But it was observed that using OpenGL pipeline outperforms CUDA-based implementation for volume ray casting \cite{7833400}. Additionally, we are going to report our experience with KD-tree implementation within fragment shader and recursion elimination and how they impact the run-time and the quality of final image respectively. 
