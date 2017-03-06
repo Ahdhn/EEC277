@@ -430,7 +430,7 @@ int main(int argc, char*argv[])
 
 					//origin of the ray is the origin of the cam
 					Vect cam_ray_origin = scene_cam.getCameraPosition();
-					Vect cam_ray_direction = camdir.vectAdd(camright.vectMult(xamnt - 0.5).vectAdd(camdown.vectMult(yamnt - 0.5))).normalize();
+					Vect cam_ray_direction = camdir.vectAdd( camright.vectMult(xamnt - 0.5).vectAdd(camdown.vectMult(yamnt - 0.5))).normalize();
 
 					Ray cam_ray(cam_ray_origin, cam_ray_direction);
 
@@ -458,8 +458,7 @@ int main(int argc, char*argv[])
 							Vect intersection_position = cam_ray_origin.vectAdd(cam_ray_direction.vectMult(intersections.at(index_of_winning_object)));
 							Vect intersection_ray_direction = cam_ray_direction;
 
-							Color intersection_color = getColorAt(intersection_position, intersection_ray_direction, scene_objects, index_of_winning_object,
-								light_sources, accuracy, ambientLight);
+							Color intersection_color = getColorAt(intersection_position, intersection_ray_direction, scene_objects, index_of_winning_object, light_sources, accuracy, ambientLight); 
 														
 							tempRed[aa_index] = intersection_color.getColorRed();
 							tempGreen[aa_index] = intersection_color.getColorGreen();
