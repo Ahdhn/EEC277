@@ -17,13 +17,16 @@ vec4 spheres[10];
 vec4 colors[10];
 vec2 materials[10];
 
+uniform sampler2D sphereTex;
 
 void init()
 {
     //the spheres of the scene 
     spheres[0] = vec4(      0.7,       0,    -1.5,    0.1);//light source sphere
+	//spheres[0] = = texture2D(sphereTex,TexCoord);
+
     spheres[1] = vec4(      -0.7,    0.25,    -1.5,    0.1);//light source sphere
-    spheres[2] = vec4(      0,    0.5,    -1.5,    0.3);//big spheres in the center 
+    spheres[2] = vec4(      0.0,    0.5,    -1.5,    0.3);//big spheres in the center 
 	//five big spheres that simulate the five walls 
     spheres[3] = vec4( 1001.0,       0,       0, 1000.0); 
     spheres[4] = vec4(-1001.0,       0,       0, 1000.0);
@@ -152,6 +155,7 @@ vec3 calcShade(vec3 pt, vec4 ob, vec4 col, vec2 mat, vec3 n)
 	}
 	return color;
 }
+
 float getFresnel(vec3 n, vec3 rd, float r0)
 {
 	//fresnel euqations 
