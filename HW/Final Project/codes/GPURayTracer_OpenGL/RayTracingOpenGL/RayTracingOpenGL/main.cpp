@@ -231,7 +231,7 @@ void ReadSphere(std::string fname, int&numSphere, double**&spheres)
 		spheres[i][1] -= 0.5;
 		spheres[i][2] -= 2.0;
 	}
-	numSphere = 2;
+	numSphere = 10;
 	BVH = BVHstart(numSphere, spheres, BVH_depth, leafNodes, nodes); 
 	BVH_depth--;
 
@@ -473,7 +473,7 @@ void MoveSphereToSSBO(int numSphere, double**Spheres, GLuint progNum)
 	GLint locNum = glGetUniformLocation(progNum, "numSphere");
 	if (locNum == -1){
 		std::cout << "Error (1) MoveSphereToShader(). Can not find the location!!!" << std::endl;
-		system("pause");
+		//system("pause");
 	}
 	else{
 		glUniform1i(locNum, numSphere);
@@ -523,7 +523,7 @@ void MoveSphereToSSBO(int numSphere, double**Spheres, GLuint progNum)
 	
 	//***********************************pass the leaf id's (these are indcies for the sphere data)
 	id = 0;
-	for (size_t i = 0; i < numSphere; i++){
+	/*for (size_t i = 0; i < numSphere; i++){
 		node_arr[id] = leafNodes[i].objectID;
 		id++;		
 	}
@@ -532,7 +532,16 @@ void MoveSphereToSSBO(int numSphere, double**Spheres, GLuint progNum)
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo3);
 	glBufferData(GL_SHADER_STORAGE_BUFFER, numSphere * sizeof(int), node_arr, GL_DYNAMIC_COPY);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ssbo3);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);*/
+
+	int* stack = new int[numSphere];	
+	GLuint ssbo3;
+	glGenBuffers(1, &ssbo3);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo3);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, numSphere * sizeof(int), stack, GL_DYNAMIC_COPY);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ssbo3);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	delete[]stack;
 	delete[]node_arr;		
 
 
@@ -643,7 +652,7 @@ int main(int argc, char*argv)
 		glClear(GL_COLOR_BUFFER_BIT);//specify which buffer to clear 
 
 		
-		ourShader.Use();	
+		//ourShader.Use();	
 
 		//Draw object 
 		glBindVertexArray(VAO);

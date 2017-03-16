@@ -16,10 +16,11 @@ layout (std430, binding=2) buffer SphereDataBuffer
 { 
 	vec4 scene_sphere[ConstNumForArray];
 };
-layout (std430, binding=3) buffer BVHleafNodesBuffer
+/*layout (std430, binding=3) buffer StackBuffer
 {
-	int BVHleafNode[ConstNumForArray];//this is an index to scene_sphere 	                    
-};
+	//int BVHleafNode[ConstNumForArray];//this is an index to scene_sphere 	                    
+	int stack[ConstNumForArray + 1];
+};*/
  layout (std430, binding=4) buffer MinBboxBuffer
 {
 	vec4 BVHnodeBoxMin [ConstNumForArray];	//we only need x,y,z but for some mysterious reason it only works with vec4
@@ -29,14 +30,8 @@ layout (std430, binding=5) buffer MaxBboxBuffer
 	vec4 BVHnodeBoxMax [ConstNumForArray];	
 };
 
-
-int stack[10 +1];
-
-
-
-
 const vec3 iResolution = vec3(800, 600, 0); //viewport resolution in pixels (defined in main)
-
+//int stack[500];
 const float maxDist = 1000.0;
 const vec3 amb = vec3(1.0);
 const float eps = 1e-3;
@@ -144,6 +139,7 @@ bool intersectSphere(vec3 ro, vec3 rd, vec4 sp, float tm, out float t)
 		t = -b - sqrt(t);
 		r = (t>0.0) && (t<tm);
 	}
+
 	return r;
 }
 void swap_float(float one, float two)
@@ -214,7 +210,7 @@ float calcInter(vec3 ro, vec3 rd, out vec4 ob, out vec4 col, out vec2 mat)
 	if(intersectSphere(ro,rd,spheres[6],tm,t)){ ob=spheres[6]; col=colors[6]; tm=t; mat= materials[6];}
 	if(intersectSphere(ro,rd,spheres[7],tm,t)){ ob=spheres[7]; col=colors[7]; tm=t; mat= materials[7];}	
 	
-	if(true){	
+	if(false){	
 		//No acceleration (brute force)
 		if(intersectBox(ro,rd,vec3(BVHnodeBoxMin[0].x,BVHnodeBoxMin[0].y,BVHnodeBoxMin[0].z),vec3(BVHnodeBoxMax[0].x,BVHnodeBoxMax[0].y,BVHnodeBoxMax[0].z))){
 		//if(intersectBox(ro,rd,vec3(-1.6523619999999999,-0.69418700000000000,-1.6586470000000000),vec3(1.6649229999999999,0.68866700000000003,1.6404209999999999))){
@@ -231,36 +227,52 @@ float calcInter(vec3 ro, vec3 rd, out vec4 ob, out vec4 col, out vec2 mat)
 
 	}
 	else{
-	 	int stack2[1000];
+	 	
+		int stack[1000];
 		//using BVH tree 		
-		stack2[0] = 1;
-		stack2[1] = 0;
+		stack[0] = 1;
+		stack[1] = 0;
 		bool start = true; 
-		while(stack2[0]!=0){ 
+		
+		while (stack[0]>0){
+				
 			//while the stack is not empty
-			int id = stack2[stack2[0]];//take the last node in the stack to test it
-			stack2[0] = stack2[0] - 1; //as it being tested, take it away 
+			int id = stack[stack[0]];//take the last node in the stack to test it
+			stack[0] = stack[0] - 1; //as it being tested, take it away 
+			
 			if(id<=0 && !start){
+				
 				//it is an object/sphere 
 				id = abs(id);
-				id = BVHleafNode[id];//get the id to index the scene_sphere
+				//id = BVHleafNode[id];//get the id to index the scene_sphere
+
+			
+
 				if(intersectSphere(ro,rd,scene_sphere[id],tm,t)){ //test for hitting the object/sphere
 					ob=scene_sphere[id];									
 					col = colors[8];						
 					tm=t;
 					mat= materials[8];
 				}
+				//id = stack2[stack2[0]];//take the last node in the stack to test it
+				//stack2[0] = stack2[0] - 1;
 			}else{
+				
 				start = false;
 				//it's another node 
 				//test if we are hitting this box 
 				if(intersectBox(ro,rd,vec3(BVHnodeBoxMin[id].x,BVHnodeBoxMin[id].y,BVHnodeBoxMin[id].z),vec3(BVHnodeBoxMax[id].x,BVHnodeBoxMax[id].y,BVHnodeBoxMax[id].z))){				
 					//if we hit it, we update the id with the left child
 					//and store the right child to the stack to be tested later 
-					id = BVHnode[id].x;
-					stack2[0] = stack2[0]+1;
-					stack2[stack2[0]] = BVHnode[id].y;
-				}
+
+					//id = BVHnode[id].x;
+										
+					stack[0] = stack[0] + 1;
+					stack[stack[0]] = BVHnode[id].y;
+					
+					stack[0] = stack[0] + 1;
+					stack[stack[0]] = BVHnode[id].x;
+				}				
 			}						
 		}
 
@@ -285,11 +297,11 @@ bool inShadow(vec3 ro, vec3 rd, float d)
 
 	
 	//if(intersectBox(ro,rd,vec3(BVH[0].bbox_min.x,BVH[0].bbox_min.y,BVH[0].bbox_min.z),vec3(BVH[0].bbox_max.x,BVH[0].bbox_max.y,BVH[0].bbox_max.z))){			
-		for(int i=0;i<numSphere;i++){
+		/*for(int i=0;i<numSphere;i++){
 			if(intersectSphere(ro,rd,scene_sphere[i],d,t)){ 
 				ret = true;
 			}
-		}
+		}*/
 	//}
 									 
 	return ret;
@@ -397,9 +409,7 @@ void main(void){
 	gl_FragColor = vec4(color,1.0f);	
 	
 	
-	/*if(abs(BVHnodeBoxMax[8].x - 0.233572766) < 0.001 && 
-	   abs(BVHnodeBoxMax[8].y - -0.397625446) < 0.001 && 
-	   abs(BVHnodeBoxMax[8].z - -1.85028052) < 0.001 ){
+	/*if (BVHnode[7].x == 7 && BVHnode[7].y == 6){
 		gl_FragColor = vec4(color,1.0f);	
 	}else{
 		gl_FragColor = vec4(1.0f,1.0f,1.0f,1.0f);	
