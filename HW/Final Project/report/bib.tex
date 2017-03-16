@@ -24,19 +24,19 @@ Nowadays, ray tracing applications are not confined to desktop applications. Web
 There are certain challenging to perform such a general-purpose program through the fixed graphics pipeline. For example, OpenGL Shading Language (GLSL) does not support recursion, pointers, or self referential struct which are all a handy tools for any programmer. The fixed pipeline requires passing through different stages that might not be necessary for the computation for ray tracing. 
 
 \section{Implementation Details}
-Here we list the major steps towards the implementation of brute force ray tracing for a static scene. We initialize the scene as two triangles such that the vertex shader just outputs the position of each vertex with minimal/no computation. All the computation takes place in the fragment shader. For each pixel, a ray is shot towards the scene. In order to calculate different effect such as reflection and shadow, a ray should bounces multiple times in order to get the effect correctly. Due to lack of recursion support, a certain depth for number of bounces a ray can do should be declared beforehand. We set this number to 5. We used spheres as our primitives but the same computation can be carried out using triangles. For the brute force implementation, each ray was tested against all objects in the scene. 
+Here we list the major steps towards the implementation of brute force ray tracing for a static scene. We initialize the scene as two triangles such that the vertex shader just outputs the position of each vertex with minimal/no computation. All the computation takes place in the fragment shader. For each pixel, a ray is shot towards the scene. In order to calculate different effects such as reflection and shadow, a ray should bounces multiple times in order to get the effect correctly. Due to lack of recursion support, a certain depth for number of bounces a ray can do should be declared beforehand. After trying different values, we set this number to 5 as a trade-off between quality and speed. We used spheres as our primitives but the same computation (with equal amount of complexity per primitive) can be carried out using triangles. For the brute force implementation, each ray was tested against all objects in the scene. 
 
 \subsection{Use of Texture Memory}
-In order to move the scene objects from the application to the graphics pipeline, one would have to pass these objects all the way down the pipeline until the fragment shader start execution. We started by using \emph{uniform} type qualifier since it is a read-only, fast, do not have to change from one execution of shader program to the next which makes it excellent for our purpose. We used them to test trivial scenes ($\leq 100$ spheres). OpenGL has only very limited number of uniform that can be declared which forced us to detach them. 
+In order to move the scene objects from the application to the graphics pipeline, one would have to pass these objects all the way down the pipeline until the fragment shader start execution. We started by using \emph{uniform} type qualifier since it is a read-only, fast, do not have to change from one execution of shader program to the next which makes it excellent for our purpose. We used \emph{uniforms} to test trivial scenes ($\leq 100$ spheres). OpenGL has only very limited number of uniforms that can be declared which forced us to detach them. 
 
-We explored two options to use the texture memory; Image Load/Store Texture and Shader Storage Buffer Objects (SSBO). We chose to use SSBO because it allows use of interface block such that we can define variable of different types (int, float, arrays, etc) which is typical for our purpose. Additionally, SSBO can offer upto the size of the GPU memory and it can have unbounded storage (up to the buffer range bound). In contrast, texture image allows only vec4 or combination of them. Also, read and write from texture was complex, unlike binding to SSBO and read from it. Another options could have been Uniform Buffer Objects (UBO), but they suffer from limitation over the size that can be used. UBO also should have specific, fixed storage size at compile-time. 
+We explored two options to use the texture memory; Image Load/Store Texture and Shader Storage Buffer Objects (SSBO). We chose to use SSBO because it allows use of interface block such that we can define variable of different types (int, float, arrays, etc) which is typical for our purpose. Additionally, SSBO can offer upto the size of the GPU memory and it can have unbounded storage (up to the buffer range bound). In contrast, texture image allows only vec4 or combination of them. Also, read and write from texture was complex, unlike binding to SSBO and read from it. Another options could have been Uniform Buffer Objects (UBO), but they suffer from limitation over the size that can be used. UBO also should have specific, fixed storage size at compile-time. Figure \ref{fig:brute} shows the results of using SSBO with Bunny model (20K spheres), Fertility model (15K spheres), Sphere modes (8K spheres), and Torus (5K spheres).
 
-\begin{figure}[!tbh]
+\begin{figure}[tbh]
  \centering     
-   \subfloat [Bunny]{\includegraphics[width=0.3\textwidth]{bunny.png}}
-   \subfloat [Fertility]{\includegraphics[width=0.3\textwidth]{fertility.png}}
-   \subfloat [Sphere]{\includegraphics[width=0.3\textwidth]{sphere.png}}   
-   \subfloat [Torus]{\includegraphics[width=0.3\textwidth]{donut.png}}
+   \subfloat [Bunny]{\includegraphics[width=0.24\textwidth]{bunny.png}}
+   \subfloat [Fertility]{\includegraphics[width=0.24\textwidth]{fertility.png}}
+   \subfloat [Sphere]{\includegraphics[width=0.24\textwidth]{sphere.png}}   
+   \subfloat [Torus]{\includegraphics[width=0.24\textwidth]{donut.png}}
    
      \caption{Results of brute-force ray tracing}
    \label{fig:brute}
@@ -68,8 +68,26 @@ The most promising parallel BVH construction approach is to use a so-called line
 Then we use the method describe in \cite{karras2012maximizing} to parallel construct the binary radix tree. One key insight in enabling parallel construction is to establish a connection between node indices and keys through a specific tree layout. The idea is to assign indices for the internal nodes in a way that enables finding their children without depending on earlier results. Using Morton code, we can easily know give a range how should we cut the range and make it into a tree. Then problem becomes how to find the range independently. We can take the advantage that the index of very internal node coincides with either its first or its last key. Then what you need to find out which direction it tends to be on the tree and its upper bound or low bound by comparing the length of the prefix with other objects (a larger difference on the prefix indicate it is likely to cut at this point). Nicely, the time complexity of this algorithm in the worst case is $\mathcal{O}(n\log_n)$.
 
 \subsection{Tree Traversal:}
+In order to traverse the tree, we had to maintain a stack of pointers to nodes that needs to be tested. As long as the stack is not empty, we pop one node and test if the ray intersects its AABB. Our first attempt was to use another SSBO buffer in order to store the stack since its size is only known at run-time. This was a short-sighted decision since any SSBO array/buffer is a global variable and all pixels/threads will try to access it causing race conditions. This was proven by the results we got (Figure \ref{fig:stack}) where the spheres kept flickering with each frame.
 
+\begin{figure}[tbh]
+ \centering     
+   \subfloat {\includegraphics[width=0.45\textwidth]{stack_as_SSBO1.jpg}}
+   \subfloat {\includegraphics[width=0.45\textwidth]{stack_as_SSBO.jpg}}
+     
+     \caption{Results of using SSBO buffer to store the stack.}
+   \label{fig:stack}
+\end{figure}
 
+We then switched to declaring a local array per pixel in order to store the stack. This gave us the right results at cost of hindering the performance severely. We plotted the number of frame per second (fps) for both brute force and BVH-based implementation where we increased the number of spheres incrementally as shown in Figure \ref{fig:loc_arr}. For each test, the stack was declare to be the depth of the resulting tree (worst case). Due to limited amount of local memory, only few ray were able to perform the computation in parallel which make BVH-based approach of the same order as brute-force approach. The conclusion we draw form here is that only stack-less BVH traversal is possible on GLSL. The drawback from stack-less tree traversal is that it is possible that some nodes are computed more than once \cite{hapala2011efficient}. 
+
+\begin{figure}[tbh]
+ \centering     
+   \subfloat {\includegraphics[width=\textwidth]{comp.jpg}}
+       
+     \caption{Frame per second (fps) for brute-force approach Vs. BVH-based approach using local array with increasing number of sphere.}
+   \label{fig:loc_arr}
+\end{figure}
 
 \medskip
 
